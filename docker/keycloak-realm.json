@@ -1,0 +1,30 @@
+{
+    "realm": "test",
+    "enabled": true,
+    "users": [
+        {
+            "username": "user",
+            "enabled": true,
+            "emailVerified": true,
+            "requiredActions": [],
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "user",
+                    "temporary": false
+                }
+            ]
+        }
+    ],
+    "clients": [
+        {
+            "clientId": "test-client",
+            "enabled": true,
+            "publicClient": true,
+            "redirectUris": ["*"],
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": true,
+            "authorizationServicesEnabled": true
+        }
+    ]
+}

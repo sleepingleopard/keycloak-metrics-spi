@@ -2,9 +2,16 @@ package org.jboss.aerogear.keycloak.metrics;
 
 import org.jboss.logging.Logger;
 import org.keycloak.events.Event;
+import org.keycloak.events.Details;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.models.RealmProvider;
+import org.keycloak.models.RealmModel;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Collections;
+import java.util.Map;
 
 public class MetricsEventListener implements EventListenerProvider {
 
@@ -13,13 +20,58 @@ public class MetricsEventListener implements EventListenerProvider {
     private final static Logger logger = Logger.getLogger(MetricsEventListener.class);
     private final RealmProvider realmProvider;
 
+    private static final List<String> EXCLUDED_REALMS = getExcludedRealms();
+    private static final List<String> EXCLUDED_PROVIDERS = getExcludedProviders();
+
     public MetricsEventListener(RealmProvider realmProvider) {
         this.realmProvider = realmProvider;
+    }
+
+    private static List<String> getExcludedRealms() {
+        String excludedRealms = System.getenv("METRICS_EXCLUDED_REALMS");
+        return excludedRealms != null ? Arrays.asList(excludedRealms.split(",")) : Collections.emptyList();
+    }
+
+    private static List<String> getExcludedProviders() {
+        String excludedProviders = System.getenv("METRICS_EXCLUDED_PROVIDERS");
+        return excludedProviders != null ? Arrays.asList(excludedProviders.split(",")) : Collections.emptyList();
+    }
+
+    private boolean isRealmExcluded(String realmName) {
+        return EXCLUDED_REALMS.contains(realmName);
+    }
+
+    private boolean isProviderExcluded(String provider) {
+        return EXCLUDED_PROVIDERS.contains(provider);
+    }
+
+    private String getIdentityProvider(Event event) {
+        if (event.getDetails() != null) {
+            for (Map.Entry<String, String> entry : event.getDetails().entrySet()) {
+                logger.debugf("Key: %s, Value: %s", entry.getKey(), entry.getValue());
+            }
+        }
+        return event.getDetails() != null ? event.getDetails().get(Details.IDENTITY_PROVIDER) : null;
+    }
+
+    private String getRealmName(String realmId) {
+        RealmModel realm = realmProvider.getRealm(realmId);
+        return realm != null ? realm.getName() : null;
     }
 
     @Override
     public void onEvent(Event event) {
         logEventDetails(event);
+
+        final String realmName = getRealmName(event.getRealmId());
+        final String provider = getIdentityProvider(event);
+
+        logger.debugf("Processing event for realm: %s, provider: %s", realmName, provider);
+
+        if (isRealmExcluded(realmName) || isProviderExcluded(provider)) {
+            logger.debugf("Event excluded for realm: %s, provider: %s", realmName, provider);
+            return;
+        }
 
         switch (event.getType()) {
             case LOGIN:

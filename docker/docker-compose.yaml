@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - METRICS_EXCLUDED_REALMS="keycloak"
+      - METRICS_EXCLUDED_PROVIDERS="keycloak"
+      - LOG_LEVEL=DEBUG
+      - KEYCLOAK_LOGLEVEL=DEBUG
+    ports:
+      - "3000:8080"
+    volumes:
+      - ../target/keycloak-metrics-spi-6.0.1-SNAPSHOT.jar:/opt/keycloak/providers/keycloak-metrics-spi.jar
+      - ./keycloak-realm.json:/opt/keycloak/data/import/keycloak-realm.json
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+  
