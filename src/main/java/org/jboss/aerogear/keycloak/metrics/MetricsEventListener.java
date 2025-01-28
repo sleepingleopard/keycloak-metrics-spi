@@ -16,6 +16,7 @@ import java.util.Map;
 public class MetricsEventListener implements EventListenerProvider {
 
     public final static String ID = "metrics-listener";
+    private final static String PROVIDER_KEYCLOAK_OPENID = "keycloak";
 
     private final static Logger logger = Logger.getLogger(MetricsEventListener.class);
     private final RealmProvider realmProvider;
@@ -45,18 +46,20 @@ public class MetricsEventListener implements EventListenerProvider {
         return EXCLUDED_PROVIDERS.contains(provider);
     }
 
-    private String getIdentityProvider(Event event) {
-        if (event.getDetails() != null) {
-            for (Map.Entry<String, String> entry : event.getDetails().entrySet()) {
-                logger.debugf("Key: %s, Value: %s", entry.getKey(), entry.getValue());
-            }
-        }
-        return event.getDetails() != null ? event.getDetails().get(Details.IDENTITY_PROVIDER) : null;
-    }
-
     private String getRealmName(String realmId) {
         RealmModel realm = realmProvider.getRealm(realmId);
         return realm != null ? realm.getName() : null;
+    }
+
+    private String getIdentityProvider(Event event) {
+        String identityProvider = null;
+        if (event.getDetails() != null) {
+            identityProvider = event.getDetails().get("identity_provider");
+        }
+        if (identityProvider == null) {
+            identityProvider = PROVIDER_KEYCLOAK_OPENID;
+        }
+        return identityProvider;
     }
 
     @Override

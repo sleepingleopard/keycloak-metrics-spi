@@ -7,10 +7,8 @@ services:
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - METRICS_EXCLUDED_REALMS="keycloak"
-      - METRICS_EXCLUDED_PROVIDERS="keycloak"
-      - LOG_LEVEL=DEBUG
-      - KEYCLOAK_LOGLEVEL=DEBUG
+      - METRICS_EXCLUDED_REALMS=test
+      - METRICS_EXCLUDED_PROVIDERS=test,keycloak
     ports:
       - "3000:8080"
     volumes:
